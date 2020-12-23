@@ -21,7 +21,7 @@ class NormalMeanField:
         return np.exp(2 * log_sigma)
 
     def entropy(self):
-        return 0.5 * self.num_params + (1.0 + np.log(2 * np.pi)) + np.sum(self.log_sigma)
+        return 0.5 * self.num_params * (1.0 + np.log(2 * np.pi)) + np.sum(self.log_sigma)
 
     def calc_elbo_and_grad(self, model, n_samples):
         def elbo(mu, log_sigma, _model, approx, _n_samples):
