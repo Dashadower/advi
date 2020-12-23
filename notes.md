@@ -36,13 +36,13 @@ else:
 def log_density(x):
     return mvn.logpdf(x, param_dict['mu'], np.diag(np.exp(2*param_dict['log_sigma'])))
 ```
-In the cate entropy can't be calculated, E[log q(theta)] would be approximated through
+In the case entropy can't be calculated, E[log q(theta)] would be approximated through
 E[log(q(x))] using a finite number of samples(x)
 
-##SGA
+## SGA
 
 Recall that in a multivariate function, its function value increases
-the fastest along the direction of its gradient. Its contrapositive also holds; 
+the fastest along the direction of its gradient. Its inverse also holds; 
 its values decreases the fastest in the direction of -delta
 
 So the most basic form of stochastic gradient ascent increments the current
