@@ -24,6 +24,10 @@ ELBO equation:
 
 therefore we can just add entropy of q since it's equivalent to `-E[ln q(theta)]`
 
+The Mean-Field Normal is equal to a Multivariate Normal Distribution with diag(sigma) as its
+covariance matrix. So we can use its entropy equation after simplifying it.
+You can check out its proof here: https://markusthill.github.io/gaussian-distribution-with-a-diagonal-covariance-matrix/
+
 in viabel code, elbo is implemented as:
 ```python
 if approx.supports_entropy:
