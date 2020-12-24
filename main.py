@@ -1,7 +1,7 @@
 def vi(model, approx_model, iter_count, eta, n_mc_samples):
     for x in range(iter_count):
-        elbo, grad = approx_model.calc_elbo_and_grad(model, n_mc_samples)  #elbo, mu_grad, sigma_grad
-        mu_grad, sigma_grad = grad[0], grad[1]
+        elbo = approx_model.elbo(model, n_mc_samples)
+        mu_grad, sigma_grad = approx_model.elbo_grad(model, n_mc_samples)
         approx_model.mu += eta * mu_grad
         approx_model.log_sigma += eta * sigma_grad
 
@@ -24,7 +24,7 @@ if __name__ == '__main__':
     import time
     start = time.time()
     eta = 0.01
-    n_mc_samples = 100
+    n_mc_samples = 50
     iters = 2000
     model = EightSchools()
     approx = NormalMeanField(model.param_count, 20201224)

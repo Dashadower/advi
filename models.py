@@ -86,12 +86,24 @@ class EightSchools(Model):
         lp = 0
         mu_index = self.param_index_dict["mu"]
         tau_index = self.param_index_dict["tau"]
-        theta_indexes = self.param_index_dict["theta_trans"]
+        theta_indexes = np.array(self.param_index_dict["theta_trans"])
+        theta = params[mu_index] + params[theta_indexes] * params[tau_index]
+        # theta is length (n_schools)
+        lp += np.sum(logpdf(params[theta_indexes], 0, 1))
+        lp += np.sum(logpdf(self.effects, theta, self.sigma))
+        return lp
+
+    def lp_sum(self, params):
+        lp = 0
+        mu_index = self.param_index_dict["mu"]
+        tau_index = self.param_index_dict["tau"]
+        theta_indexes = np.array(self.param_index_dict["theta_trans"])
         theta = np.tile(params[:, mu_index], (self.school_count, 1)).T + \
                 params[:, theta_indexes] * np.tile(params[:, tau_index], (self.school_count, 1)).T
         # theta is dim (n_draws, n_schools)
         lp += np.sum(logpdf(params[:, theta_indexes], 0, 1))
-        lp += np.sum(logpdf(np.tile(self.effects, (theta.shape[0], 1)), theta, np.tile(self.sigma, (theta.shape[0], 1))))
+        lp += np.sum(
+            logpdf(np.tile(self.effects, (theta.shape[0], 1)), theta, np.tile(self.sigma, (theta.shape[0], 1))))
         return lp
 
     def unconstrain_params(self, param_arr):
