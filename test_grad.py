@@ -21,7 +21,7 @@ def elbo_sigma(log_sigma, mu, _model, approx, _n_samples):
 
 if __name__ == '__main__':
     import time
-    from scipy.optimize import approx_fprime
+    from scipy.optimize import approx_fprime  # approx_fprime blows up if a constant PRNG key isn't used in mean_field
     test_random_key = random.PRNGKey(int(time.time()))
 
     model = EightSchools()

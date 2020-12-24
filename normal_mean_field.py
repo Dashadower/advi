@@ -37,3 +37,8 @@ class NormalMeanField:
             return lp / _n_samples + approx.entropy()
 
         return value_and_grad(elbo, (0, 1))(self.mu, self.log_sigma, model, self, n_samples)  # grad wrt self.mu, self.sigma
+
+if __name__ == '__main__':
+    mf = NormalMeanField(10, 25123)
+    print(mf.sample(mf.mu, mf.log_sigma,n_draws=1))
+    print(mf.sample(mf.mu, mf.log_sigma,n_draws=1))

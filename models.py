@@ -83,17 +83,16 @@ class EightSchools(Model):
         self.sigma = np.array([15, 10, 16, 11, 9, 11, 10, 18], dtype=float)
 
     def lp(self, params):
-        if isinstance(params, np.ndarray):
-            lp = 0
-            mu_index = self.param_index_dict["mu"]
-            tau_index = self.param_index_dict["tau"]
-            theta_indexes = self.param_index_dict["theta_trans"]
-            theta = np.tile(params[:, mu_index], (self.school_count, 1)).T + \
-                    params[:, theta_indexes] * np.tile(params[:, tau_index], (self.school_count, 1)).T
-            # theta is dim (n_draws, n_schools)
-            lp += np.sum(logpdf(params[:, theta_indexes], 0, 1))
-            lp += np.sum(logpdf(np.tile(self.effects, (theta.shape[0], 1)), theta, np.tile(self.sigma, (theta.shape[0], 1))))
-            return lp
+        lp = 0
+        mu_index = self.param_index_dict["mu"]
+        tau_index = self.param_index_dict["tau"]
+        theta_indexes = self.param_index_dict["theta_trans"]
+        theta = np.tile(params[:, mu_index], (self.school_count, 1)).T + \
+                params[:, theta_indexes] * np.tile(params[:, tau_index], (self.school_count, 1)).T
+        # theta is dim (n_draws, n_schools)
+        lp += np.sum(logpdf(params[:, theta_indexes], 0, 1))
+        lp += np.sum(logpdf(np.tile(self.effects, (theta.shape[0], 1)), theta, np.tile(self.sigma, (theta.shape[0], 1))))
+        return lp
 
     def unconstrain_params(self, param_arr):
         param_arr = param_arr.copy()
@@ -130,13 +129,13 @@ if __name__ == '__main__':
     # check vectorized lp works
     n_draws = 10
     mf = NormalMeanField(10, int(time.time()))
-    mf.mu = np.array([3.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], dtype=float) # lp should be -41.24325221126154
-    #mf.log_sigma = np.tile(-20, mf.num_params)
+    mf.mu = np.array([3.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], dtype=float)
+    #mf.log_sigma = np.tile(-0.5, mf.num_params)
     st = time.time()
     samples = mf.sample(mf.mu, mf.log_sigma, n_draws=n_draws)
     print(samples)
     print(EightSchools().lp(samples) / n_draws, time.time() - st)
-    print(analytic_8schools_lp(mf.mu[0], mf.mu[1], mf.mu[2:]))
+    print(analytic_8schools_lp(mf.mu[0], mf.mu[1], mf.mu[2:]))  # lp should be -41.24325221126154
     """st = time.time()
     lp = 0
     for x in range(n_draws):
