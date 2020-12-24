@@ -6,23 +6,34 @@ def vi(model, approx_model, iter_count, eta, n_mc_samples):
         approx_model.log_sigma += eta * sigma_grad
 
         if x % 100 == 0:
-            model.set_constrained_params(model.convert_vector_to_param_dict(approx_model.mu))
             print(f"ITERATION {x}, ELBO VALUE: {elbo}")
-            model.pprint()
+            model.pprint(model.convert_vector_to_param_dict(model.constrain_params(approx.mu)))
+            print(mu_grad)
+            print(sigma_grad)
 
     print("-" * 20)
     print("ALL ITERATIONS FINISHED")
     print("FINAL RESULTS:")
-    model.pprint()
+    print("ELBO:", elbo)
+    model.pprint(model.convert_vector_to_param_dict(model.constrain_params(approx.mu)))
 
 
 if __name__ == '__main__':
     from normal_mean_field import NormalMeanField
     from models import EightSchools
-    eta = 0.025
-    n_mc_samples = 50
+    import time
+    start = time.time()
+    eta = 0.01
+    n_mc_samples = 100
     iters = 2000
     model = EightSchools()
-    approx = NormalMeanField(model.param_count, 20201223)
-    model.set_constrained_params(model.convert_vector_to_param_dict(approx.sample()))
+    approx = NormalMeanField(model.param_count, 20201224)
+    approx.mu = model.constrain_params(model.convert_param_dict_to_vector(
+        {
+            "mu": 3.0,
+            "tau": 2.0,
+            "theta_trans": [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]
+        }
+    ))
     vi(model, approx, iters, eta, n_mc_samples)
+    print(f"total time: {time.time() - start} seconds")
