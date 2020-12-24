@@ -20,8 +20,8 @@ class NormalMeanField:
         mu = mu if isinstance(mu, np.ndarray) else self.mu
         log_sigma = log_sigma if isinstance(log_sigma, np.ndarray) else self.log_sigma
 
-        new_rng_key = random.split(self.rng_key)[1]  # need to recreate key after every use!!
-        return mu + self.log_sigma_to_sigma_sq(log_sigma) * random.normal(new_rng_key, (n_draws, log_sigma.shape[0]))
+        self.rng_key = random.split(self.rng_key)[1]  # need to recreate key after every use!!
+        return mu + self.log_sigma_to_sigma_sq(log_sigma) * random.normal(self.rng_key, (n_draws, log_sigma.shape[0]))
 
     def log_sigma_to_sigma_sq(self, log_sigma):
         return np.exp(log_sigma)

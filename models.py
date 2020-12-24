@@ -128,12 +128,13 @@ if __name__ == '__main__':
         lp += sum(logpdf(effects, theta, sigma))
         return lp
     # check vectorized lp works
-    n_draws = 500
+    n_draws = 10
     mf = NormalMeanField(10, int(time.time()))
     mf.mu = np.array([3.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], dtype=float) # lp should be -41.24325221126154
     #mf.log_sigma = np.tile(-20, mf.num_params)
     st = time.time()
     samples = mf.sample(mf.mu, mf.log_sigma, n_draws=n_draws)
+    print(samples)
     print(EightSchools().lp(samples) / n_draws, time.time() - st)
     print(analytic_8schools_lp(mf.mu[0], mf.mu[1], mf.mu[2:]))
     """st = time.time()
