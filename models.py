@@ -71,13 +71,14 @@ class Model:
 
 
 class EightSchools(Model):
-    def __init__(self):
+    def __init__(self, init_arr):
         param_dict = {
             "mu": 0,
             "tau": 1,
-            "theta_trans": [2,3,4,5,6,7,8,9],  # array of 8 floats
+            "theta_t": [2, 3, 4, 5, 6, 7, 8, 9],  # array of 8 floats
         }
         super().__init__(8 + 1 + 1, param_dict)
+        self.param_arr = init_arr #self.convert_param_dict_to_vector(self.param_dict)
         self.school_count = 8
         self.effects = np.array([28, 8, -3, 7, -1, 1, 18, 12], dtype=float)
         self.sigma = np.array([15, 10, 16, 11, 9, 11, 10, 18], dtype=float)
@@ -86,42 +87,57 @@ class EightSchools(Model):
         lp = 0
         mu_index = self.param_index_dict["mu"]
         tau_index = self.param_index_dict["tau"]
-        theta_indexes = np.array(self.param_index_dict["theta_trans"])
-        theta = params[mu_index] + params[theta_indexes] * params[tau_index]
+        theta_t_indexes = np.array(self.param_index_dict["theta_t"])
+        theta = params[mu_index] + params[theta_t_indexes] * params[tau_index]
         # theta is length (n_schools)
-        lp += np.sum(logpdf(params[theta_indexes], 0, 1))
+        lp += np.sum(logpdf(params[theta_t_indexes], 0, 1))
+        lp += np.sum(logpdf(self.effects, theta, self.sigma))
+        return lp
+
+    def unconstrain_lp(self, params):
+        lp = 0
+        mu_index = self.param_index_dict["mu"]
+        logtau_index = self.param_index_dict["tau"]
+        theta_t_indexes = np.array(self.param_index_dict["theta_t"])
+        theta = params[mu_index] + params[theta_t_indexes] * np.exp(params[logtau_index])
+        lp += params[logtau_index] #jacobian adjustment for log transform
+        lp += np.sum(logpdf(params[theta_t_indexes], 0, 1))
         lp += np.sum(logpdf(self.effects, theta, self.sigma))
         return lp
 
     def lp_sum(self, params):
         lp = 0
         mu_index = self.param_index_dict["mu"]
-        tau_index = self.param_index_dict["tau"]
-        theta_indexes = np.array(self.param_index_dict["theta_trans"])
+        logtau_index = self.param_index_dict["tau"]
+        theta_t_indexes = np.array(self.param_index_dict["theta_t"])
         theta = np.tile(params[:, mu_index], (self.school_count, 1)).T + \
-                params[:, theta_indexes] * np.tile(params[:, tau_index], (self.school_count, 1)).T
+                params[:, theta_t_indexes] * np.tile(np.exp(params[:, logtau_index]), (self.school_count, 1)).T
         # theta is dim (n_draws, n_schools)
-        lp += np.sum(logpdf(params[:, theta_indexes], 0, 1))
+        lp += np.sum(params[logtau_index]) * params.shape[0] #TODO check * params.shape[0] (= n_draws)
+        lp += np.sum(logpdf(params[:, theta_t_indexes], 0, 1)) * params.shape[0] #TODO check * params.shape[0]
         lp += np.sum(
             logpdf(np.tile(self.effects, (theta.shape[0], 1)), theta, np.tile(self.sigma, (theta.shape[0], 1))))
         return lp
 
-    def unconstrain_params(self, param_arr):
-        param_arr = param_arr.copy()
-        #param_arr[self.param_index_dict["tau"]] = np.log(param_arr[self.param_index_dict["tau"]])  # (0, int) -> R
-        index_update(param_arr, self.param_index_dict["tau"], np.log(param_arr[self.param_index_dict["tau"]]))
-        return param_arr
+    def unconstrain_params(self):
+        self.param_arr[self.param_index_dict["tau"]] = np.log(self.param_arr[self.param_index_dict["tau"]])
 
-    def constrain_params(self, param_arr):
-        param_arr = param_arr.copy()
+
+    def constrain_params(self):
         #param_arr[self.param_index_dict["tau"]] = np.exp(self.param_index_dict["tau"])  # R -> (0, inf)
-        index_update(param_arr, self.param_index_dict["tau"], np.exp(param_arr[self.param_index_dict["tau"]]))
+        index_update(self.param_arr, self.param_index_dict["tau"], np.exp(self.param_arr[self.param_index_dict["tau"]]))
+        return
+
+    def report_constrain_params(self, param_arr):
+        param_arr = list(param_arr)
+        #index_update(param_arr, self.param_index_dict["tau"], np.exp(param_arr[self.param_index_dict["tau"]]))
+        param_arr[self.param_index_dict["tau"]]=np.exp(param_arr[self.param_index_dict["tau"]])
         return param_arr
 
     def pprint(self, param_dict):
         out = [f"mu: {param_dict['mu']}", f"tau: {param_dict['tau']}"]
         for x in range(self.school_count):
-            out.append(f"theta_trans[{x}]: {param_dict['theta_trans'][x]}")
+            out.append(f"theta_t[{x}]: {self.param_dict['theta_t'][x]}")
 
         print("\n".join(out))
 
@@ -145,9 +161,9 @@ if __name__ == '__main__':
     #mf.log_sigma = np.tile(-0.5, mf.num_params)
     st = time.time()
     samples = mf.sample(mf.mu, mf.log_sigma, n_draws=n_draws)
-    print(samples)
-    print(EightSchools().lp(samples) / n_draws, time.time() - st)
-    print(analytic_8schools_lp(mf.mu[0], mf.mu[1], mf.mu[2:]))  # lp should be -41.24325221126154
+    # print(samples)
+    # print(EightSchools().lp(samples) / n_draws, time.time() - st)
+    # print(analytic_8schools_lp(mf.mu[0], mf.mu[1], mf.mu[2:]))  # lp should be -41.24325221126154
     """st = time.time()
     lp = 0
     for x in range(n_draws):
