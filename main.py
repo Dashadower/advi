@@ -26,7 +26,7 @@ def adagrad_vi(model, approx_model, iter_count, step_size, n_mc_samples, tau=1):
     mu_grad_accumulator = onp.zeros(model.param_count)
     omega_grad_accumulator = onp.zeros(model.param_count)
     assert iter_count > 0 and step_size > 0 and n_mc_samples > 0
-    for x in range(iter_count):
+    for x in range(1,iter_count+1):
         elbo, mu_grad, omega_grad = approx_model.elbo_and_grad(model, n_mc_samples)
         if x == 1:
             mu_grad_accumulator += onp.power(mu_grad_accumulator, 2)
@@ -62,4 +62,5 @@ if __name__ == '__main__':
     approx = NormalMeanField(model.param_count, 20201224)
     #approx.mu = np.array([8.0, np.log(6.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-    vi(model, approx, iters, step_size, n_mc_samples)
+    #vi(model, approx, iters, step_size, n_mc_samples)
+    adagrad_vi(model, approx, iters, step_size, n_mc_samples)
