@@ -1,5 +1,6 @@
 import jax.numpy as np
 from jax.scipy.stats.norm import logpdf
+from jax.scipy.stats import cauchy
 from jax.ops import index_update
 
 
@@ -110,6 +111,23 @@ class EightSchools(Model):
     def constrain_param_array(self, param_arr):
         # param_arr[self.param_index_dict["tau"]] = np.exp(self.param_index_dict["tau"])  # R -> (0, inf)
         return index_update(param_arr, self.param_index_dict["tau"], np.exp(param_arr[self.param_index_dict["tau"]]))
+
+
+class EightSchoolsCentered(EightSchools):
+    def __init__(self, init_arr):
+        super().__init__(init_arr)
+
+    def unconstrain_lp(self, params):
+        lp = 0
+        mu_index = self.param_index_dict["mu"]
+        logtau_index = self.param_index_dict["tau"]
+        theta_t_indexes = np.array(self.param_index_dict["theta_t"])
+        lp += params[logtau_index]  # jac adjustment
+        lp += cauchy.logpdf(np.exp(params[logtau_index]), 0, 5)
+        lp += np.sum(logpdf(params[theta_t_indexes], params[mu_index], np.exp(params[logtau_index])))
+        lp += np.sum(logpdf(self.effects, params[theta_t_indexes], self.sigma))
+        lp += logpdf(params[mu_index], 0, 5)
+        return lp
 
 
 if __name__ == '__main__':

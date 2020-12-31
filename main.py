@@ -52,15 +52,19 @@ def adagrad_vi(model, approx_model, iter_count, step_size, n_mc_samples, tau=1):
 
 if __name__ == '__main__':
     from normal_mean_field import NormalMeanField
-    from models import EightSchools
+    from models import EightSchools, EightSchoolsCentered
     import time
+    print("please check which vi function and Model is being used")
+    time.sleep(2)
+
     step_size = 0.01
     n_mc_samples = 30
     iters = 10000
     init_arr = onp.array([8.0, 6.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    model = EightSchools(init_arr)
+    #model = EightSchools(init_arr)
+    model = EightSchoolsCentered(init_arr)
     approx = NormalMeanField(model.param_count, 20201224)
     #approx.mu = np.array([8.0, np.log(6.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-    #vi(model, approx, iters, step_size, n_mc_samples)
-    adagrad_vi(model, approx, iters, step_size, n_mc_samples)
+    vi(model, approx, iters, step_size, n_mc_samples)
+    #adagrad_vi(model, approx, iters, step_size, n_mc_samples)
